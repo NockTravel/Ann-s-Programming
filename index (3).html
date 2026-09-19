@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strength Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF0F3; --surface:#FFFFFF; --ink:#181A1F; --muted:#697082;
+    --line:#E3E6EC; --accent:#0E7A6B; --accent-ink:#0A5749; --accent-soft:#DEF1EC;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);line-height:1.5;
+    font-family:'Archivo',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:660px;margin:0 auto;padding:28px 18px 64px;}
+  .title{font-weight:800;font-size:30px;letter-spacing:-0.02em;margin:0;}
+  .subtitle{color:var(--muted);margin-top:4px;font-size:15px;}
+  .banner{margin:18px 0;padding:14px 16px;border-radius:14px;font-weight:600;font-size:15px;
+    background:var(--accent-soft);color:var(--accent-ink);border:1px solid #CFE8E1;}
+  .banner.upcoming{background:#FFF4E0;color:#8A5A00;border-color:#F3E0B8;}
+  .banner.done{background:#EDEFF3;color:var(--muted);border-color:var(--line);}
+  .pills{display:flex;gap:8px;margin:16px 0 22px;}
+  .pill{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:12px;
+    padding:10px 8px;cursor:pointer;text-align:center;font-family:inherit;font-size:13px;
+    color:var(--muted);transition:border-color .15s,color .15s,box-shadow .15s;}
+  .pill b{display:block;color:var(--ink);font-size:15px;font-weight:700;margin-bottom:2px;}
+  .pill.active{border-color:var(--accent);color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--accent);}
+  .pill.active b{color:var(--accent-ink);}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;}
+  .panel-head{display:flex;align-items:baseline;justify-content:space-between;
+    padding:16px 20px 12px;border-bottom:1px solid var(--line);}
+  .panel-head h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-0.01em;}
+  .panel-dates{color:var(--muted);font-size:13px;font-weight:500;}
+  .ex{display:flex;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line);}
+  .panel > .ex:last-child{border-bottom:none;}
+  .ex-num{flex:none;width:30px;height:30px;border-radius:9px;background:var(--accent-soft);
+    color:var(--accent-ink);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .ex-body{flex:1;min-width:0;}
+  .ex-name{font-weight:700;font-size:17px;letter-spacing:-0.01em;}
+  .ex-presc{font-size:15px;margin-top:2px;}
+  .ex-note{color:var(--muted);font-size:13.5px;margin-top:4px;font-style:italic;}
+  .ex-media{margin-top:10px;}
+  .vbtn{font-family:inherit;font-size:14px;font-weight:600;color:var(--accent-ink);
+    background:var(--accent-soft);border:1px solid #CFE8E1;padding:8px 14px;border-radius:10px;cursor:pointer;}
+  .vlink{font-size:14px;font-weight:600;color:var(--accent-ink);text-decoration:none;
+    border-bottom:1px solid currentColor;padding-bottom:1px;}
+  .frame{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000;}
+  .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .superset{margin:8px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);
+    border-radius:10px;padding:2px 4px 6px 0;}
+  .ss-label{font-size:12px;font-weight:700;color:var(--accent-ink);
+    letter-spacing:0.02em;padding:8px 0 2px 18px;}
+  .ss-rows .ex{padding:12px 18px;border-bottom:1px dashed #C7E2DB;}
+  .ss-rows .ex:last-child{border-bottom:none;}
+  .ss-rows .ex-num{background:var(--accent);color:#fff;}
+  footer{margin-top:22px;color:var(--muted);font-size:13px;text-align:center;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .panel{animation:fade .2s ease}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Edit this title / subtitle for your client -->
+  <h1 class="title">Strength Program</h1>
+  <p class="subtitle">September block &middot; opens to today&rsquo;s session automatically</p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="pills" id="pills">
+    <button class="pill" data-s="1" type="button"><b>Session 1</b>Mon 21 &amp; 28 Sep</button>
+    <button class="pill" data-s="2" type="button"><b>Session 2</b>Wed 23 &amp; 30 Sep</button>
+    <button class="pill" data-s="3" type="button"><b>Session 3</b>Fri 25 Sep</button>
+  </div>
+
+  <div id="session-container"></div>
+
+  <footer>Tap a session above to view any day. Tap a demo to watch it here.</footer>
+</div>
+
+<script>
+/* ============================================================
+   1) SCHEDULE  — date (YYYY-MM-DD) -> which session loads that day
+   ============================================================ */
+const SCHEDULE = [
+  {date:'2026-09-21', session:1},
+  {date:'2026-09-23', session:2},
+  {date:'2026-09-25', session:3},
+  {date:'2026-09-28', session:1},
+  {date:'2026-09-30', session:2},
+];
+
+/* ============================================================
+   2) SESSIONS — your program.
+      Each exercise: {name, scheme, load, note, video}
+        scheme / load / note  -> optional, leave '' to hide
+        video -> paste a YouTube ID (the part after "v=") to get an
+                 inline player. Leave '' and it shows a "Find a demo" link.
+      Superset: {t:'ss', label:'Superset', ex:[ {..}, {..} ]}
+   ============================================================ */
+const SESSIONS = {
+  1: { title:'Session 1', dates:'Mon 21 & Mon 28 Sep', items:[
+    {name:'Overhead Squat',   scheme:'4 × 6',        load:'15 kg bar or plate',   note:'', video:''},
+    {name:'Incline DB Bench', scheme:'4 × 6',        load:'7–9 kg',               note:'', video:''},
+    {name:'Lateral Raise',    scheme:'3 × 10',       load:'4–6 kg',               note:'', video:''},
+    {name:'Walking Lunges',   scheme:'3 × 8 / leg',  load:'weight of choice',     note:'', video:''},
+    {t:'ss', label:'Superset', ex:[
+      {name:'Roman Chair Leg Raises', scheme:'', load:'', note:'', video:''},
+      {name:'Pallof Press',           scheme:'2 × 12 / side', load:'cable or band', note:'', video:''},
+    ]},
+  ]},
+
+  2: { title:'Session 2', dates:'Wed 23 & Wed 30 Sep', items:[
+    {name:'Lat Pulldown',      scheme:'3 × 8', load:'33 kg', note:'', video:''},
+    {name:'Trap Bar Deadlift', scheme:'4 × 6', load:'10–15 kg each side',
+       note:'Use a regular bar instead of the trap bar if you’d prefer.', video:''},
+    {t:'ss', label:'Superset', ex:[
+      {name:'Hamstring Curl',    scheme:'3 × 8 / leg', load:'7 kg each side', note:'', video:''},
+      {name:'Seated Calf Raise', scheme:'3 × 12',      load:'15 kg',          note:'', video:''},
+    ]},
+    {name:'Seated Chest Fly', scheme:'3 × 12', load:'', note:'', video:''},
+    {t:'ss', label:'Superset', ex:[
+      {name:'Bench Leg Lowers', scheme:'', load:'', note:'', video:''},
+      {name:'Bosu Single-Leg Balance (eyes closed)', scheme:'2 × 30 s / leg', load:'', note:'', video:''},
+    ]},
+  ]},
+
+  3: { title:'Session 3', dates:'Fri 25 Sep', items:[
+    {name:'Front Squat', scheme:'4 × 6', load:'5–10 kg each side of bar', note:'', video:''},
+    {t:'ss', label:'Superset', ex:[
+      {name:'Hack Squat Calf Raise', scheme:'3 × 12', load:'',        note:'', video:''},
+      {name:'Upright Row',           scheme:'3 × 8',  load:'10–12 kg', note:'', video:''},
+    ]},
+    {name:'DB Pullover',      scheme:'3 × 10', load:'12 kg',    note:'', video:''},
+    {name:'DB Bent-Over Row', scheme:'3 × 8',  load:'14–18 kg', note:'', video:''},
+    {t:'ss', label:'Superset', ex:[
+      {name:'Lat Row',         scheme:'2 × 12', load:'', note:'', video:''},
+      {name:'Tricep Pushdown', scheme:'2 × 12', load:'', note:'', video:''},
+    ]},
+  ]},
+};
+
+/* ============================================================
+   Rendering + date logic (no need to edit below)
+   ============================================================ */
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function todayISO(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function pretty(iso){
+  const [y,m,d]=iso.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  return DOW[dt.getDay()]+' '+d+' '+MON[m-1];
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function presc(ex){return [ex.scheme,ex.load].filter(Boolean).map(esc).join(' · ');}
+
+function media(ex){
+  if(ex.video){
+    return '<div class="vid" data-id="'+esc(ex.video)+'"><button class="vbtn" type="button">▶ Watch demo</button></div>';
+  }
+  const q=encodeURIComponent(ex.name+' exercise form');
+  return '<a class="vlink" href="https://www.youtube.com/results?search_query='+q+'" target="_blank" rel="noopener">Find a demo ↗</a>';
+}
+
+function exRow(ex,num){
+  const p=presc(ex);
+  return '<div class="ex"><div class="ex-num">'+num+'</div><div class="ex-body">'
+    +'<div class="ex-name">'+esc(ex.name)+'</div>'
+    +(p?'<div class="ex-presc">'+p+'</div>':'')
+    +(ex.note?'<div class="ex-note">'+esc(ex.note)+'</div>':'')
+    +'<div class="ex-media">'+media(ex)+'</div>'
+    +'</div></div>';
+}
+function ssBlock(ss,num){
+  const rows=ss.ex.map((e,i)=>exRow(e,num+String.fromCharCode(65+i))).join('');
+  return '<div class="superset"><div class="ss-label">'+esc(ss.label||'Superset')+'</div>'
+    +'<div class="ss-rows">'+rows+'</div></div>';
+}
+function renderSession(id){
+  const s=SESSIONS[id]; let n=0;
+  const body=s.items.map(it=>{n++;return it.t==='ss'?ssBlock(it,n):exRow(it,n);}).join('');
+  return '<div class="panel"><div class="panel-head"><h2>'+esc(s.title)+'</h2>'
+    +'<span class="panel-dates">'+esc(s.dates)+'</span></div>'+body+'</div>';
+}
+
+const pills=[...document.querySelectorAll('.pill')];
+function showSession(id){
+  document.getElementById('session-container').innerHTML=renderSession(id);
+  pills.forEach(p=>p.classList.toggle('active',+p.dataset.s===id));
+}
+pills.forEach(p=>p.addEventListener('click',()=>showSession(+p.dataset.s)));
+
+// tap a "Watch demo" button -> inline YouTube player
+document.addEventListener('click',e=>{
+  const vid=e.target.closest('.vid');
+  if(vid && e.target.classList.contains('vbtn')){
+    const id=vid.getAttribute('data-id');
+    vid.innerHTML='<div class="frame"><iframe src="https://www.youtube.com/embed/'+encodeURIComponent(id)
+      +'?autoplay=1&rel=0" title="Exercise demo" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>';
+  }
+});
+
+// decide which session to load from today's date
+(function init(){
+  const today=todayISO();
+  const banner=document.getElementById('banner');
+  const hit=SCHEDULE.find(s=>s.date===today);
+  if(hit){
+    banner.textContent='Today · '+pretty(today)+' — Session '+hit.session;
+    showSession(hit.session);
+    return;
+  }
+  const next=SCHEDULE.filter(s=>s.date>today).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  if(next){
+    banner.classList.add('upcoming');
+    banner.textContent='No session today. Next up: Session '+next.session+' · '+pretty(next.date);
+    showSession(next.session);
+    return;
+  }
+  const last=SCHEDULE[SCHEDULE.length-1];
+  banner.classList.add('done');
+  banner.textContent='This training block has wrapped up — showing your last session.';
+  showSession(last.session);
+})();
+</script>
+</body>
+</html>
